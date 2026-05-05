@@ -1,18 +1,22 @@
 import { useServiceConfig } from '../../context/ServiceConfigContext';
-import { COUNTRY_OPTIONS, LANGUAGE_OPTIONS } from '../../data/configSchema';
+import { BOOKING_TYPES, COUNTRY_OPTIONS, LANGUAGE_OPTIONS } from '../../data/configSchema';
 import {
-  FileText, MapPin, Globe, Users, Tag, BookOpen,
-  Clock, Shield, AlertCircle, ChevronDown, ChevronRight
+  MapPin, Globe, Users, BookOpen,
+  Clock, Shield, Timer, Package, Zap, Info,
+  ChevronDown, ChevronRight
 } from 'lucide-react';
 import { useState } from 'react';
+
+const BT_ICONS = { 'time-based': Timer, 'package-based': Package, 'on-demand': Zap };
 
 export default function ServiceSetupStep() {
   const { config, updateBasicInfo } = useServiceConfig();
   const info = config.basicInfo;
+  const bt = BOOKING_TYPES[config.bookingType];
+  const BtIcon = BT_ICONS[config.bookingType] || Timer;
 
   const [expandedSections, setExpandedSections] = useState({
-    basic: true,
-    included: true,
+    target: true,
     booking: true,
     flexibility: false,
   });
@@ -24,45 +28,39 @@ export default function ServiceSetupStep() {
       <div className="main-content__header">
         <div>
           <div className="main-content__title">Step 1: Service Setup</div>
-          <div className="main-content__subtitle">Configure basic service information</div>
+          <div className="main-content__subtitle">Configure operational rules for this service</div>
         </div>
       </div>
 
-      {/* ─── Basic Information ─── */}
+      {/* ─── Service Identity Card (Read-only from CreateService) ─── */}
+      <div className="service-identity-card animate-fade-in">
+        <div className="service-identity-card__icon" style={{ background: `${bt.color}12`, color: bt.color }}>
+          <BtIcon size={28} />
+        </div>
+        <div className="service-identity-card__info">
+          <div className="service-identity-card__name">{config.serviceName}</div>
+          <div className="service-identity-card__desc">{info.description || '—'}</div>
+          <div className="service-identity-card__tags">
+            <span className="service-identity-card__tag" style={{ background: `${bt.color}12`, color: bt.color, borderColor: `${bt.color}30` }}>
+              <BtIcon size={11} /> {bt.label}
+            </span>
+          </div>
+        </div>
+        <div className="service-identity-card__hint">
+          <Info size={13} />
+          <span>Edit in Service Management</span>
+        </div>
+      </div>
+
+      {/* ─── Target Audience ─── */}
       <ConfigSection
-        title="Basic Information"
-        icon={<FileText size={16} />}
-        badge="Required"
-        expanded={expandedSections.basic}
-        onToggle={() => toggle('basic')}
+        title="Target Audience"
+        icon={<Globe size={16} />}
+        badge="Configure"
+        expanded={expandedSections.target}
+        onToggle={() => toggle('target')}
       >
         <div className="config-form">
-          <div className="config-form__group">
-            <label className="config-form__label">
-              Service Name <span className="config-form__required">*</span>
-            </label>
-            <input
-              className="config-form__input"
-              value={info.name}
-              onChange={e => updateBasicInfo({ name: e.target.value })}
-              placeholder="e.g. Family Consultation"
-            />
-          </div>
-
-          <div className="config-form__group">
-            <label className="config-form__label">
-              Description <span className="config-form__required">*</span>
-            </label>
-            <textarea
-              className="config-form__input config-form__textarea"
-              value={info.description}
-              onChange={e => updateBasicInfo({ description: e.target.value })}
-              placeholder="Describe what this service offers..."
-              rows={3}
-            />
-            <span className="config-form__hint">{info.description.length}/200 characters</span>
-          </div>
-
           <div className="config-form__row">
             <div className="config-form__group">
               <label className="config-form__label">
@@ -98,6 +96,20 @@ export default function ServiceSetupStep() {
                   </label>
                 ))}
               </div>
+            </div>
+
+            <div className="config-form__group">
+              <label className="config-form__label">Age Range</label>
+              <select
+                className="config-form__input"
+                value={info.ageRange}
+                onChange={e => updateBasicInfo({ ageRange: e.target.value })}
+              >
+                <option value="all-ages">All Ages</option>
+                <option value="adults">Adults Only (18+)</option>
+                <option value="children">Children (Under 18)</option>
+                <option value="seniors">Seniors (60+)</option>
+              </select>
             </div>
           </div>
 
@@ -151,39 +163,7 @@ export default function ServiceSetupStep() {
         </div>
       </ConfigSection>
 
-      {/* ─── What's Included ─── */}
-      <ConfigSection
-        title="What's Included"
-        icon={<Tag size={16} />}
-        badge="Optional"
-        expanded={expandedSections.included}
-        onToggle={() => toggle('included')}
-      >
-        <div className="config-form">
-          <div className="config-form__group">
-            <label className="config-form__label">Inclusions</label>
-            <textarea
-              className="config-form__input config-form__textarea"
-              value={info.inclusions}
-              onChange={e => updateBasicInfo({ inclusions: e.target.value })}
-              placeholder="List what is included in this service..."
-              rows={3}
-            />
-          </div>
-          <div className="config-form__group">
-            <label className="config-form__label">Exclusions</label>
-            <textarea
-              className="config-form__input config-form__textarea"
-              value={info.exclusions}
-              onChange={e => updateBasicInfo({ exclusions: e.target.value })}
-              placeholder="List what is not included..."
-              rows={3}
-            />
-          </div>
-        </div>
-      </ConfigSection>
-
-      {/* ─── Booking & Rules ─── */}
+      {/* ─── Booking Rules ─── */}
       <ConfigSection
         title="Booking Rules"
         icon={<Clock size={16} />}
@@ -251,7 +231,7 @@ export default function ServiceSetupStep() {
 
       {/* ─── Flexibility ─── */}
       <ConfigSection
-        title="Flexibility"
+        title="Flexibility & Cancellation"
         icon={<Shield size={16} />}
         badge="Optional"
         expanded={expandedSections.flexibility}
