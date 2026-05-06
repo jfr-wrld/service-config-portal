@@ -1,37 +1,25 @@
 import { useServiceConfig } from '../context/ServiceConfigContext';
-import ConfigStepNav from './ConfigStepNav';
-import ServiceSetupStep from './steps/ServiceSetupStep';
-import PricingStep from './steps/PricingStep';
-import AvailabilityConfigStep from './steps/AvailabilityConfigStep';
-import AdditionalInfoStep from './steps/AdditionalInfoStep';
-import ReviewStep from './steps/ReviewStep';
-import {
-  Layers, ArrowLeft, Save, RotateCcw, ChevronLeft, ChevronRight,
-} from 'lucide-react';
+import AdminConfigPage from './AdminConfigPage';
 import { BOOKING_TYPES } from '../data/configSchema';
-import { CONFIG_STEPS } from '../context/ServiceConfigContext';
+import {
+  Layers, ArrowLeft, Save, Download, Timer, Package, Zap,
+} from 'lucide-react';
+
+const BT_ICONS = { Timer, Package, Zap };
 
 export default function ServiceConfigurator({ service, onBack }) {
-  const { config, activeStepId, setActiveStep, setConfig } = useServiceConfig();
+  const { rules } = useServiceConfig();
+  if (!rules) return null;
+
   const bt = BOOKING_TYPES[service.bookingType];
-
-  const currentStepIdx = CONFIG_STEPS.findIndex(s => s.id === activeStepId);
-  const isFirst = currentStepIdx === 0;
-  const isLast = currentStepIdx === CONFIG_STEPS.length - 1;
-
-  const goNext = () => {
-    if (!isLast) setActiveStep(CONFIG_STEPS[currentStepIdx + 1].id);
-  };
-  const goPrev = () => {
-    if (!isFirst) setActiveStep(CONFIG_STEPS[currentStepIdx - 1].id);
-  };
+  const BtIcon = BT_ICONS[bt.icon] || Timer;
 
   const handleExport = () => {
-    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(rules, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${config.serviceName.replace(/\s+/g, '_').toLowerCase()}_config.json`;
+    a.download = `${rules.serviceName.replace(/\s+/g, '_').toLowerCase()}_rules.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -45,7 +33,7 @@ export default function ServiceConfigurator({ service, onBack }) {
             <ArrowLeft size={16} />
           </button>
           <div className="app-header__logo">
-            <div className="app-header__logo-icon" style={{ background: service.color }}>
+            <div className="app-header__logo-icon" style={{ background: service.color || bt.color }}>
               <Layers size={18} />
             </div>
             <span>Service Config</span>
@@ -57,39 +45,23 @@ export default function ServiceConfigurator({ service, onBack }) {
           <span className="app-header__service-badge" style={{
             background: `${bt.color}12`, color: bt.color, borderColor: `${bt.color}30`
           }}>
-            {bt.label}
+            <BtIcon size={11} /> {bt.label}
           </span>
         </div>
 
         <div className="app-header__right">
-          {/* Step Navigation */}
-          <div className="step-nav-inline">
-            <button className="btn btn--ghost btn--sm" onClick={goPrev} disabled={isFirst}>
-              <ChevronLeft size={14} /> Prev
-            </button>
-            <span className="step-nav-inline__label">
-              Step {currentStepIdx + 1} of {CONFIG_STEPS.length}
-            </span>
-            <button className="btn btn--ghost btn--sm" onClick={goNext} disabled={isLast}>
-              Next <ChevronRight size={14} />
-            </button>
-          </div>
-
-          <div className="app-header__divider" />
-          <button className="btn btn--primary btn--sm" onClick={handleExport}>
-            <Save size={14} /> Export
+          <button className="btn btn--secondary btn--sm" onClick={handleExport}>
+            <Download size={14} /> Export Rules
+          </button>
+          <button className="btn btn--primary btn--sm">
+            <Save size={14} /> Save Config
           </button>
         </div>
       </header>
 
-      {/* Layout */}
-      <div className="app-layout">
-        <ConfigStepNav />
-        {activeStepId === 'basic-info' && <ServiceSetupStep />}
-        {activeStepId === 'pricing' && <PricingStep />}
-        {activeStepId === 'availability' && <AvailabilityConfigStep />}
-        {activeStepId === 'additional' && <AdditionalInfoStep />}
-        {activeStepId === 'review' && <ReviewStep />}
+      {/* One-page body */}
+      <div className="admin-page-wrapper">
+        <AdminConfigPage />
       </div>
     </>
   );

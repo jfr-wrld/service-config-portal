@@ -1,15 +1,15 @@
 import { ServiceConfigProvider, useServiceConfig } from './context/ServiceConfigContext';
 import ServiceManagement from './components/ServiceManagement';
 import ServiceConfigurator from './components/ServiceConfigurator';
-import { getDefaultServiceConfig } from './data/configSchema';
+import { getDefaultRules } from './data/configSchema';
 import { useState } from 'react';
 
 function AppRouter() {
   const [activeService, setActiveService] = useState(null);
-  const { setConfig } = useServiceConfig();
+  const { setRules } = useServiceConfig();
 
   const handleSelectService = (service) => {
-    setConfig(getDefaultServiceConfig(service));
+    setRules(getDefaultRules(service));
     setActiveService(service);
   };
 
